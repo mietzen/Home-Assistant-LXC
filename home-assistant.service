@@ -1,0 +1,13 @@
+[Unit]
+Description=Home Assistant
+After=network-online.target
+[Service]
+Type=simple
+User=homeassistant
+WorkingDirectory=/srv/homeassistant/.homeassistant
+ExecStart=/srv/homeassistant/bin/hass -c "/srv/homeassistant/.homeassistant"
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
