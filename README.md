@@ -120,6 +120,8 @@ AuthPass=YOUR-PASSWORD!
 
 ### Setup cronjob:
 
+Backup config before upgrade, rotate logs and backups.
+
 ```shell
 nano home-assistant-updater.cron
 ```
@@ -168,6 +170,8 @@ fi
 echo ""
 exit 0
 ```
+
+Run every saturday at 04:00, log to `/var/log/home-assistant-update/`
 
 ```shell
 crontab -e
