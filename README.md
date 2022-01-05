@@ -1,3 +1,4 @@
+This is my personal documentation on how I installed Home-Assistant in LXC.
 # Main setup
 ## Install dependecies:
 ```shell
