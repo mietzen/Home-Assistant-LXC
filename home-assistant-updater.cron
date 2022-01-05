@@ -1,0 +1,42 @@
+#!/bin/bash
+echo "Starting updater $(date)"
+if systemctl is-active --quiet home-assistant.service; then
+  if [ $(su -c '/srv/homeassistant/check-for-updates.sh' homeassistant) -ne 0 ]; then
+    echo "Stoping service"
+    systemctl stop home-assistant.service
+    echo "Backing up config"
+    mkdir -p /srv/homeassistant/backups
+    tar -czf "/srv/homeassistant/backups/Home-Assistant-config-$(date -u -I).tar.gz" -C /srv/homeassistant/ .homeassistant
+    echo "Starting upgrade"
+    su -c '/srv/homeassistant/upgrade-home-assistant.sh' homeassistant
+    echo "Starting service"
+    systemctl start home-assistant.service
+    echo "Checking service"
+    sleep 5
+    if systemctl is-active --quiet home-assistant.service; then
+      if [ $(ls /srv/homeassistant/backups | wc -l) -ge 5 ]; then
+        echo "Deleting old backups"
+        echo "removing $(ls -t /srv/homeassistant/backups/Home-Assistant-config-*.tar.gz | tail -1)"
+        rm "$(ls -t /srv/homeassistant/backups/Home-Assistant-config-*.tar.gz | tail -1)"
+      fi
+      if [ $(ls /var/log/home-assistant-update/ | wc -l) -ge 4 ]; then
+        echo "Deleting old logs"
+        echo "removing $(ls -t /var/log/home-assistant-update/*.log | tail -1)"
+        rm "$(ls -t /var/log/home-assistant-update/*.log | tail -1)"
+      fi
+      sendmail nils.stein@mailbox.org <<< "Subject: Home Assistant Update successful" <<<  "Home Assistant is now up-to-date"
+      echo "Update successful"
+    else
+      sendmail nils.stein@mailbox.org <<< "Subject: Home Assistant Update FAILED" <<<  "Home Assistant is broken!"
+      echo "FAILURE! Service is not comming up!"
+      exit 1
+    fi
+  else
+    echo "Home Assistant is up-to-date"
+  fi
+else
+  echo "FAILURE! Service is not running!"
+  exit 1
+fi
+echo ""
+exit 0
